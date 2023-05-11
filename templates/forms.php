@@ -11,8 +11,25 @@ class Form {
         // Require category arrays
         require(ROOT_PATH.'data/categories.php');
 
+        if(
+            (isset($_SESSION['event_cat_key'])
+        && isset($_SESSION['event_type_key'])
+        && isset($_SESSION['venue_cat_key'] )
+        && isset($_SESSION['venue_type_key'])
+        && isset($_SESSION['price_range_key'])) || 
+        (isset($_POST['event_category'])
+        && isset($_POST['event_type'])
+        && isset($_POST['venue_cat'] )
+        && isset($_POST['venue_type'])
+        && isset($_POST['price_range']))
+        ) {
+            $search_section_class = 'session_search';
+        } else {
+            $search_section_class = '';
+        }
+
         $search_form = '
-        <div id="search-section" class="py-3 position-relative" style="z-index: 1;">
+        <div id="search-section" class="py-3 position-relative '.$search_section_class.'" style="z-index: 1;">
             <p class="validation-msg text-danger text-center small"></p>
             <div class="container-lg rounded shadow p-0">            
                 <form class="row gx-3 gy-2 align-items-center" id="search_form" method="post" action="'.SITE_URL.'/?page=search&action=view_results">
@@ -21,9 +38,11 @@ class Form {
                         <label for="event_category">Event Category</label>
                         <select class="form-select border-0" id="event_category" name="event_category" required>
                         <option></option>';
-                        $val_counter1 = 0;
+                        $val_counter1 = 0;                  
                         foreach($event_cat as $event_category) {
-                            $search_form .= '<option value="'.$val_counter1.'">'.$event_category.'</option>';                    
+                            $selected_key = isset($_POST['event_category']) ? $_POST['event_category'] : (isset($_SESSION['event_cat_key']) ? $_SESSION['event_cat_key'] : '' );
+                            $is_selected = $selected_key == $val_counter1 ? 'selected' : '';
+                            $search_form .= '<option value="'.$val_counter1.'" '.$is_selected.'>'.$event_category.'</option>';                    
                             $val_counter1++;
                         }
                         $search_form .= '
@@ -37,7 +56,9 @@ class Form {
                         <option></option>';
                         $val_counter2 = 0;
                         foreach($event_types as $event_type) {
-                            $search_form .= '<option value="'.$val_counter2.'">'.$event_type.'</option>';                    
+                            $selected_key = isset($_POST['event_type']) ? $_POST['event_type'] : (isset($_SESSION['event_type_key']) ? $_SESSION['event_type_key'] : '' );
+                            $is_selected = $selected_key == $val_counter2 ? 'selected' : '';
+                            $search_form .= '<option value="'.$val_counter2.'" '.$is_selected.'>'.$event_type.'</option>';                    
                             $val_counter2++;
                         }
                         $search_form .= '
@@ -51,7 +72,9 @@ class Form {
                         <option></option>';
                         $val_counter3 = 0;
                         foreach($venue_cat as $venue_cat) {
-                            $search_form .= '<option value="'.$val_counter3.'">'.$venue_cat.'</option>';                    
+                            $selected_key = isset($_POST['venue_cat']) ? $_POST['venue_cat'] : (isset($_SESSION['venue_cat_key'] )? $_SESSION['venue_cat_key'] : '' );
+                            $is_selected = $selected_key == $val_counter3 ? 'selected' : '';
+                            $search_form .= '<option value="'.$val_counter3.'" '.$is_selected.'>'.$venue_cat.'</option>';                    
                             $val_counter3++;
                         }
                         $search_form .= '
@@ -65,7 +88,9 @@ class Form {
                         <option></option>';
                         $val_counter4 = 0;
                         foreach($venue_type as $venue_type) {
-                            $search_form .= '<option value="'.$val_counter4.'">'.$venue_type.'</option>';                    
+                            $selected_key = isset($_POST['venue_type']) ? $_POST['venue_type'] :(isset($_SESSION['venue_type_key']) ? $_SESSION['venue_type_key'] : '' );
+                            $is_selected = $selected_key == $val_counter4 ? 'selected' : '';
+                            $search_form .= '<option value="'.$val_counter4.'" '.$is_selected.'>'.$venue_type.'</option>';                    
                             $val_counter4++;
                         }
                         $search_form .= '
@@ -79,7 +104,9 @@ class Form {
                         <option></option>';
                         $val_counter5 = 0;
                         foreach($price_range as $price_range) {
-                            $search_form .= '<option value="'.$val_counter5.'">'.$price_range.'</option>';                    
+                            $selected_key = isset($_POST['price_range']) ? $_POST['price_range'] : (isset($_SESSION['price_range_key']) ? $_SESSION['price_range_key'] : '' );
+                            $is_selected = $selected_key == $val_counter5 ? 'selected' : '';
+                            $search_form .= '<option value="'.$val_counter5.'" '.$is_selected.'>'.$price_range.'</option>';                    
                             $val_counter5++;
                         }
                         $search_form .= '
@@ -100,6 +127,7 @@ class Form {
     }
 
     function register_form() {
+        $ref_url = isset($_GET['ref']) ? '&ref='.$_GET['ref'] : '';
         $register_form =  '
 
         <div class="container position-absolute top-50 start-50 translate-middle text-white">
@@ -107,7 +135,7 @@ class Form {
                 <div class="col-7 py-4 px-5 shadow-lg" style="background-color: rgba(1, 1, 39, 0.8);">
                     <h1 class="card-title mt-3 text-center">Create Account</h1>
                     <p class="text-center">Get started with your free account</p>
-                    <form id="register_form" method="post" action="'.SITE_URL.'/?page=register&action=register_account">
+                    <form id="register_form" method="post" action="'.SITE_URL.'/?page=register&action=register_account'.$ref_url.'">
                     <div class="row mb-3">
                         <div class="col">
                             <label class="fw-bold mb-2" for="company_name">Company Name:<span class="text-danger">*</span></label>
@@ -166,7 +194,7 @@ class Form {
                        </div>
                     </div>
                     <button class="w-100 btn btn-lg btn-primary rounded-0" type="submit">Register</button>
-                    <p class="text-white mt-5 mb-3 text-center">Already have an account? <a class="text-white fw-bold" href="?page=login">Login</a></p>
+                    <p class="text-white mt-5 mb-3 text-center">Already have an account? <a class="text-white fw-bold" href="?page=login'.$ref_url.'">Login</a></p>
                     </form>
                 </div>
             </div>            
@@ -178,6 +206,7 @@ class Form {
     }
 
     function login_form($has_error){
+        $ref_url = isset($_GET['ref']) ? SITE_URL.$_SERVER['REQUEST_URI'].'&action=account_login' : SITE_URL.'/?page=login&action=account_login';
         $login_form = '
         
         <div class="container position-absolute top-50 start-50 translate-middle" style="z-index: 1;">
@@ -192,7 +221,7 @@ class Form {
                     }
                     
                     $login_form .= '
-                    <form id="login_form" method="post" action="'.SITE_URL.'/?page=login&action=account_login">
+                    <form id="login_form" method="post" action="'.$ref_url.'">
                     <div class="mb-3">
                     <label class="fw-bold mb-2" for="email_address">Email Address:<span class="text-danger">*</span></label>
                     <input type="email" class="form-control" id="email_address" name="email_address" placeholder="your@email.com" required>

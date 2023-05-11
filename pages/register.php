@@ -84,7 +84,8 @@ class RegisterPage {
                         mobile_number,
                         website_url,
                         registered_date,
-                        user_type
+                        user_type,
+                        avatar
                     )
                     VALUES (
                         '$user_id',
@@ -98,7 +99,8 @@ class RegisterPage {
                         '$mobile_number',
                         '',
                         '$register_date',
-                        '$account_type'
+                        '$account_type',
+                        ''
                     )";
                         
                     // If successful, show confirmation text and send email
@@ -117,6 +119,7 @@ class RegisterPage {
                     );
         
                     // Display confirmation text
+                    $ref_url = isset($_GET['ref']) ? '&ref='.$_GET['ref'] : '';
                     $html = '
         
                     <div class="container position-absolute top-50 start-50 translate-middle text-white">
@@ -125,7 +128,7 @@ class RegisterPage {
                             '.SITE_LOGO.'
                             <p class="h4 text-center">Account created successfully</p>
                             <p class="text-center">An email has been sent to your inbox.</p>
-                            <p class="text-center"><a class="bbtn btn-black rounded-0" href="?page=login" role="button">Login</a></p>
+                            <p class="text-center"><a class="bbtn btn-black rounded-0" href="?page=login'.$ref_url.'" role="button">Login</a></p>
                             </div>
                         </div>
                         </div>

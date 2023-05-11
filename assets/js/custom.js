@@ -236,7 +236,15 @@
         //$('#account_type').select2();
         
         // Disable Other select except the first
-        $('#search-section .col, #search-section .col-2, #search-section .col-auto').not(':first-child').find('.form-select').prop('disabled', true);
+        if($('#search-section').is('.session_search')) {
+            $('#search-section .col, #search-section .col-2, #search-section .col-auto').not(':first-child').removeClass('text-muted').find('.form-select').prop('disabled', false);
+        } else {
+            if(!$('#search-section .col, #search-section .col-2, #search-section .col-auto').not(':first-child').hasClass('.text-muted')){
+                $('#search-section .col, #search-section .col-2, #search-section .col-auto').not(':first-child').addClass('text-muted').find('.form-select').prop('disabled', true);
+            } else {
+                $('#search-section .col, #search-section .col-2, #search-section .col-auto').not(':first-child').find('.form-select').prop('disabled', true);
+            }           
+        }
             
         // Enable Tootltips
         $(function () {

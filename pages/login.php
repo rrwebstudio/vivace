@@ -14,7 +14,7 @@ class LoginPage {
 
     // Login page - Forgot Password form
     if( isset($_GET['action']) && $_GET['action'] == 'forgot' ) {
-        if(empty($_SESSION)) {
+        if(empty($_SESSION['user_id'])) {
             // User not logged in
             // Show Forgot password form
             //return $form->login_form(false);
@@ -72,7 +72,12 @@ class LoginPage {
                         $_SESSION['account_type'] = $user_type;
                         $_SESSION['avatar'] = $avatar;
                         // Then rdirect to Account Dashboard
-                        redirect('?page=account_dashboard');                                   
+                        $ref_url = isset($_GET['ref']) ? $_GET['ref'] : '';
+                        if(empty($ref_url)){
+                          redirect('?page=account_dashboard');
+                        } else {
+                          redirect($ref_url);
+                        }                                                          
                       } else {
                         // Password incorrect
                         // show error in login form
@@ -93,7 +98,7 @@ class LoginPage {
             }
 
         } else {
-            if(empty($_SESSION)) {
+            if(empty($_SESSION['user_id'])) {
               $has_error = false;
               return $form->login_form($has_error);
             } else {

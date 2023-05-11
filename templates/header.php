@@ -62,7 +62,7 @@ class Header extends Template {
                 <div class="collapse navbar-collapse d-lg-flex" id="navbar">
                 '.SITE_LOGO.'
                 <ul class="navbar-nav col-lg-9 justify-content-lg-end text-end">';
-                if(empty($_SESSION)) {
+                if(empty($_SESSION['user_id'])) {
                     $html .='
                     <li class="nav-item">
                     <a class="nav-link" href="'.SITE_URL.'/?page=login">Login</a>
@@ -74,7 +74,7 @@ class Header extends Template {
                 } else {
                     $html .='
                     <li class="nav-item">
-                    <a class="btn-primary nav-link" href="'.SITE_URL.'/?page=account_dashboard&action=post_listing">Post a Rental</a>
+                    <a class="btn-primary nav-link" href="'.SITE_URL.'/?page=account_dashboard&action=post_listing">Post a Listing</a>
                     </li>
                     <li class="nav-item">
                     <a class="nav-link" href="'.SITE_URL.'/?page=view_profile&id='.$_SESSION['user_id'].'">My Profile</a>

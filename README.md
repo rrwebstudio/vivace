@@ -4,7 +4,7 @@ A website app built with PHP, MySQL, Bootstrap, and jQuery.
 
 System Coder: RR Web Studio / rrwebstudio.com
 
-This is built with LAMP with the following specs:
+This is built on LAMP stack with the following specs:
 
 Intel®️ Core i3-4010U (1.7GHz)  
 Memory: 8GB DDR3  

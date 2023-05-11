@@ -26,10 +26,12 @@ class AccountDashboard {
             <div class="container-lg py-5">
                 <div class="row gx-5">
                     <div class="col-4">'
-                        .$widget->dashboard_links()    
-                        .$widget->total_sales()
-                        .$widget->followers()
-                        .$widget->message_box().
+                        .$widget->dashboard_links();
+
+                        if($_SESSION['account_type'] == 'company') $content .= $widget->total_sales();
+                        if($_SESSION['account_type'] == 'company') $content .= $widget->followers();
+                        
+                        $content .= $widget->message_box().
                     '</div>
                     <div class="col custom-padding">';
                     // action=post_listing = post equipment set for rent to database
@@ -401,7 +403,90 @@ class AccountDashboard {
                         }
 
                         else {
-
+                            $content .= '
+                            <div class="alert alert-success border-2 mb-4 p-4 shadow overflow-hidden" role="alert">
+                            You have a total of 6 Discounts! Feel free to use them.                            
+                            </div>
+                            <div class="card p-5 mb-5">
+                                <h3 class="mb-5">Discounts</h3>
+                                <div class="row gx-5 mb-3">
+                                    <div class="col">
+                                        <div class="row shadow-sm discount-tag">
+                                            <div class="col-3 bg-success">
+                                                <span class="small text-white">Discount</span>
+                                            </div>
+                                            <div class="col p-3 bg-white border">
+                                                <p class="fw-bold mb-0">Soundcheck Discount up to ₱ 10,000</p>
+                                                <div class="row">
+                                                    <div class="col-auto">
+                                                        <span class="d-inline-block small fw-bold border border-2 py-0 px-1"><a class="" href="#">Souncheck Inc.</a></span>
+                                                    </div>
+                                                    <div class="col text-end">
+                                                        <a class="text-success small fw-bold text-uppercase" href="#">Use &raquo;</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="row shadow-sm discount-tag">
+                                            <div class="col-3 bg-success">
+                                                <span class="small text-white">Discount</span>
+                                            </div>
+                                            <div class="col p-3 bg-white border">
+                                                <p class="fw-bold mb-0">LSL20 Discount up to ₱ 5,000</p>
+                                                <div class="row">
+                                                    <div class="col-auto">
+                                                        <span class="d-inline-block small fw-bold border border-2 py-0 px-1"><a class="" href="#">Lights and Sounds LTD.</a></span>
+                                                    </div>
+                                                    <div class="col text-end">
+                                                        <a class="text-success small fw-bold text-uppercase" href="#">Use &raquo;</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row gx-5 mb-3">
+                                    <div class="col">
+                                        <div class="row shadow-sm discount-tag">
+                                            <div class="col-3 bg-success">
+                                                <span class="small text-white">Discount</span>
+                                            </div>
+                                            <div class="col p-3 bg-white border">
+                                                <p class="fw-bold mb-0">Soundcheck Discount up to ₱ 10,000</p>
+                                                <div class="row">
+                                                    <div class="col-auto">
+                                                        <span class="d-inline-block small fw-bold border border-2 py-0 px-1"><a class="" href="#">Souncheck Inc.</a></span>
+                                                    </div>
+                                                    <div class="col text-end">
+                                                        <a class="text-success small fw-bold text-uppercase" href="#">Use &raquo;</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="row shadow-sm discount-tag">
+                                            <div class="col-3 bg-success">
+                                                <span class="small text-white">Discount</span>
+                                            </div>
+                                            <div class="col p-3 bg-white border">
+                                                <p class="fw-bold mb-0">LSL20 Discount up to ₱ 5,000</p>
+                                                <div class="row">
+                                                    <div class="col-auto">
+                                                        <span class="d-inline-block small fw-bold border border-2 py-0 px-1"><a class="" href="#">Lights and Sounds LTD.</a></span>
+                                                    </div>
+                                                    <div class="col text-end">
+                                                        <a class="text-success small fw-bold text-uppercase" href="#">Use &raquo;</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> 
+                            ';
                         }                                                                                
                     }
                     $content .= '                        

@@ -1,1 +1,1 @@
-# Poject Vivace for Mike Ricafrente
+# Project Vivace for Mike Ricafrente

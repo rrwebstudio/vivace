@@ -1,0 +1,302 @@
+/*
+
+GLOBAL
+
+*/
+body {
+    font-size: .8rem;
+    font-family: 'Inter', sans-serif;
+}
+
+a {
+    text-decoration: none;
+}
+
+@media (min-width: 1200px) {
+    .container, .container-lg, .container-md, .container-sm, .container-xl {
+        max-width: 1340px !important;
+    }
+}
+
+textarea:hover, 
+input:hover, 
+textarea:active, 
+input:active, 
+textarea:focus, 
+input:focus,
+button:focus,
+button:active,
+button:hover,
+label:focus,
+.btn:active,
+.btn.active
+{
+    outline:0px !important;
+    -webkit-appearance:none;
+    box-shadow: none !important;
+}
+
+.bg-image {
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    background-size: cover;    
+}
+
+.bg-overlay,
+.home-cat-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    --circle_w: 2px;
+  --circle_color: black;
+  --bg_color: transparent;
+  --m_bet_circle: 2px;
+  --A: calc(var(--circle_w) + var(--m_bet_circle));
+  --B: calc(var(--circle_w) / 2);
+  background: 0 0/var(--A) var(--A) radial-gradient(circle at center, var(--circle_color) var(--B), var(--bg_color) var(--B)), center/cover  no-repeat;
+}
+
+.bg-gray-200 {
+    --bs-bg-rgb-color: var(--bs-gray-200-rgb);
+    background-color: var(--bs-gray-200);
+}
+
+
+/*
+
+HEADER
+
+*/
+
+#main-header {
+    background-color: #F6F6F7;    
+}
+
+#main-header .navbar {
+    border-bottom: 1px solid #e1e1e1;
+}
+
+#text-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: #fff;
+    text-transform: lowercase;
+    font-size: 30px;
+    line-height: 1;
+}
+
+.login #text-logo {
+    color: #fff;
+    zoom: 1.1;
+}
+
+#main-header .text-muted {
+    opacity: 0.5;
+}
+
+/*
+
+CONTENT
+
+*/
+
+#search-section form {
+    box-sizing: border-box;
+}
+
+#search-section label {
+    font-size: 12px;
+    font-weight: 700;
+    display: block;
+}
+
+#search-section .container-lg {
+    background-color: #fff;
+}
+
+.select2-container--default .select2-selection--multiple,
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    box-sizing: border-box;
+    border-width: 0px !important;
+    border-radius: 0px !important;
+}
+
+.select2-container .select2-search--inline .select2-search__field {
+    font-size: inherit !important;
+    font-family: inherit !important;
+}
+
+.select2-container .select2-search--inline .select2-search__field {
+    height: 22px !important;
+}
+
+.select2-results__message[role="alert"] {
+    font-size: 12px;
+}
+
+.select2-container--open .select2-dropdown--below {
+    border: 1px solid #aaa !important;
+}
+
+.select2-no-results{display:none;} 
+
+#search-section .col {
+    min-height: 58px !important;
+}
+
+.select2-selection--single {
+    font-size: 13px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice,
+.select2-results__option {
+    font-size: 12px;
+}
+
+.select2-container--default .select2-selection--single {
+    border: none !important;
+    margin-top: 3px;
+}
+
+#post_form .select2-container--default .select2-selection--single,
+#post_form .select2-container--default .select2-selection--multiple,
+#post_form .select2-container--default.select2-container--focus .select2-selection--multiple {    
+    margin-top: 3px;
+    height: auto;
+    font-size: 1rem;
+    color: #212529;    
+}
+ 
+#post_form .select2-container--default .select2-selection--single .select2-selection__placeholder,
+#post_form .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+    color: #565 !important;
+}
+
+#post_form .select2-container--default .select2-selection--multiple .select2-selection__choice,
+#post_form .select2-results__option {
+    font-size: 15px;
+}
+
+#post_form .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    top: 91% !important;
+} 
+
+#post_form .select2-container--default .select2-selection--multiple {
+    border: 1px solid #dee2e6 !important;
+    padding: 0rem 0.75rem;
+    margin-top: 0px;
+    margin-left: 0px !important;
+    border-radius: 4px !important;
+    height: 45px !important;
+}
+
+#post_form .select2-container .select2-search--inline .select2-search__field {
+    margin-top: 0px !important;
+    line-height: 1.4;
+}
+
+#post_form .select2-selection__rendered {
+    margin-bottom: 0px !important;
+}
+
+.select2-container--default.select2-container--disabled .select2-selection--single {
+    background-color: transparent !important;
+}
+
+#search-section .border-light {
+    border-color: #fff !important;
+}
+
+@media (min-width: 1200px) {
+    #search-section .d-grid {
+        height: 91px !important;
+    }
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #444 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    top: 60% !important;
+}
+
+.form-login {
+    max-width: 330px;
+    padding: 15px;
+}
+
+.form-register {
+    max-width: 330px;
+    padding: 15px;
+}
+
+.custom-padding {
+    margin-top: 80px;
+}
+
+.dash-card {
+    width: 94%;
+}
+
+.form-check .form-check-label {
+    font-size: 16px;
+}
+
+label.set_photo  {
+    font-size: 14px;
+}
+
+.post-content::before {
+    background-image: linear-gradient( top, 
+            rgba( 255, 255, 255, 0 ) 0%, 
+            rgba( 255, 255, 255, 1 ) 100% );
+        background-image: -moz-linear-gradient( top, 
+            rgba( 255, 255, 255, 0 ) 0%, 
+            rgba( 255, 255, 255, 1 ) 100% );
+        background-image: -ms-linear-gradient( top, 
+            rgba( 255, 255, 255, 0 ) 0%, 
+            rgba( 255, 255, 255, 1 ) 100% );
+        background-image: -o-linear-gradient( top, 
+            rgba( 255, 255, 255, 0 ) 0%, 
+            rgba( 255, 255, 255, 1 ) 100% );
+        background-image: -webkit-linear-gradient( top, 
+            rgba( 255, 255, 255, 0 ) 0%, 
+            rgba( 255, 255, 255, 1 ) 100% );
+    content: "\00a0";
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+.small {
+    font-size: 0.7rem;
+}
+
+.price-text {
+    font-size: 0.9rem;
+}
+
+.link-title {
+    width: auto !important;
+    height: auto !important;
+    font-size: 1rem;
+    min-width: 55%;
+}
+
+.cat-link:hover {
+    border-color: #999 !important;
+}
+
+#select2-price_range-results.foreign li:first-child {
+    display: none;
+}
+
+#select2-price_range-results.local li:first-child {
+    display: block;
+}

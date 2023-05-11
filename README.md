@@ -1,6 +1,6 @@
 # Project Vivace for Mike Ricafrente
 
-A website app built with PHP, MySQL, Bootstrap, and jQuery.
+A website app built with vanilla PHP, MySQL, Bootstrap, and jQuery.
 
 System Coder: RR Web Studio / rrwebstudio.com
 

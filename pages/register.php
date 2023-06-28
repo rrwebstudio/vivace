@@ -73,7 +73,8 @@ class RegisterPage {
                         website_url,
                         registered_date,
                         user_type,
-                        avatar
+                        avatar,
+                        follower_discount
                     )
                     VALUES (
                         '$email_address',
@@ -87,7 +88,8 @@ class RegisterPage {
                         '',
                         '$register_date',
                         '$account_type',
-                        ''
+                        '',
+                        0
                     )";
                         
                     // If successful, show confirmation text and send email

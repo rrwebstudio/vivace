@@ -253,6 +253,9 @@
 
         // Call select2 custom function
         select2Func();
+        $('#discount_settings').select2({
+            placeholder: 'Select Discount Option',
+        });
 
         // Validate search form on submission
         // Run through all the fields and check if the fields are answered
@@ -286,10 +289,35 @@
                     alreadyexist: true
                 },
                 'password': {
-                    minlength: 5,
+                    minlength: 8,
                 },
                 'password_confirm': {
-                    minlength: 5,
+                    minlength: 8,
+                    equalTo: "#password"
+                }
+                
+            },
+            errorPlacement: function(error, element) { },
+        });
+
+        // Reset Password form validation
+        $('#reset_form').validate({
+            errorClass: 'border-danger text-danger',
+        });
+
+        $('#profile_form').validate({
+            errorClass: 'border-danger text-danger',
+            errorPlacement: function(error, element) { },
+        });
+
+        $('#password_form').validate({
+            errorClass: 'border-danger text-danger',
+            rules: {
+                'password': {
+                    minlength: 8,
+                },
+                'password_confirm': {
+                    minlength: 8,
                     equalTo: "#password"
                 }
                 
@@ -309,7 +337,11 @@
 
         $('#post_form #venue_category').select2({
             placeholder: 'Select Venue Type',
-        });     
+        }); 
+        
+        $('#discount_form').validate({
+            errorClass: 'border-danger text-danger',
+        });
 
         // jQuery validation - post form
         var local_events = getArrayFromJson('local_events');
@@ -320,7 +352,7 @@
         $('#post_form').validate({
             errorClass: 'border-danger text-danger',
         });
-
+        
         var isForeignEvent = false;
         var isLocalEvent = false;
         var isIndoorEvent = false;
@@ -328,49 +360,113 @@
         $( '#post_form #event_category').on('select2:select', function () {
             var selected = $(this).select2('data');
             $.each( local_events[0], function( i, local_event ) {
-                if(local_event == selected[0].text) {                    
-                    isLocalEvent = true;
-                }                 
+                $.each( selected, function( k, selected_option ) {
+                    if(local_event == selected_option.text) {                    
+                        isLocalEvent = true;
+                        console.log(selected_option.text + 'is local'); 
+                    } 
+                });                               
+
             });
             $.each( foreign_events[0], function( i, foreign_event ) {
-                if(foreign_event == selected[0].text) {
-                    isForeignEvent = true;
-                }                 
+                $.each( selected, function( k, selected_option ) {
+                    if(foreign_event == selected_option.text) {                
+                        isForeignEvent = true;
+                        console.log(selected_option.text + 'is foreign');
+                    } 
+                });                                
             });
-            if(isLocalEvent === true && isForeignEvent === false) {           
+            if(isLocalEvent === true) {           
                 $( '#post_form #event_type_Local').prop( "checked", true ).trigger('change'); 
-                $( '#post_form #event_type_Foreign').prop( "checked", false ).trigger('change');    
-            } else if(isLocalEvent=== false && isForeignEvent === true) {                    
-                $( '#post_form #event_type_Foreign').prop( "checked", true ).trigger('change'); 
-                $( '#post_form #event_type_Local').prop( "checked", false ).trigger('change');  
-            }  
+                  
+            }
+            if(isForeignEvent === true) { 
+                $( '#post_form #event_type_Foreign').prop( "checked", true ).trigger('change');                
+            }
         });
         $( '#post_form #venue_category').on('select2:select', function () {
             var selected = $(this).select2('data');
             $.each( indoor_venue[0], function( i, indoor_venue ) {
-                if(indoor_venue == selected[0].text) {
-                    isIndoorEvent = true;
-                }                 
+                $.each( selected, function( k, selected_option ) {
+                    if(indoor_venue == selected_option.text) {
+                        isIndoorEvent = true;
+                        console.log(selected_option.text + 'is indoor'); 
+                    }
+                });                                 
             });
             $.each( outdoor_venue[0], function( i, outdoor_venue ) {
-                if(outdoor_venue == selected[0].text) {
-                    isOutdoorEvent = true;
-                }                 
+                $.each( selected, function( k, selected_option ) { 
+                    if(outdoor_venue == selected_option.text) {
+                        isOutdoorEvent = true;
+                        console.log(selected_option + 'is outdoor'); 
+                    }  
+                });                               
             });
-            if(isIndoorEvent === true && isOutdoorEvent === false) {           
-                $( '#post_form #venue_type_Indoor').prop( "checked", true ).trigger('change');
-                $( '#post_form #venue_type_Outdoor').prop( "checked", false ).trigger('change');   
-            } else if(isIndoorEvent === false && isOutdoorEvent === true) {                    
-                $( '#post_form #venue_type_Outdoor').prop( "checked", true ).trigger('change'); 
-                $( '#post_form #venue_type_Indoor').prop( "checked", false ).trigger('change');   
+            if(isIndoorEvent === true) {           
+                $( '#post_form #venue_type_Indoor').prop( "checked", true ).trigger('change'); 
+            }
+            
+            if(isOutdoorEvent === true) {                    
+                $( '#post_form #venue_type_Outdoor').prop( "checked", true ).trigger('change');  
             }  
         });
 
-        // Call tinymice editor
-        tinymce.init({
-            selector: 'textarea#set_desc',
-            promotion: false,
-            toolbar: 'undo redo | bold italic alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+        $( '#post_form #event_category').on('select2:clear', function () {
+            var selected = $(this).select2('data');
+            console.log('clear ' +selected);
+
+        });
+
+        var textarea = $('textarea').length;
+
+        if(textarea > 0) {
+            // Call tinymice editor
+            tinymce.init({
+                selector: 'textarea#set_desc',
+                promotion: false,
+                toolbar: 'undo redo | bold italic alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        tinymce.triggerSave();
+                    });
+                }
+            });
+
+            tinymce.init({
+                selector: 'textarea#message',
+                promotion: false,
+                toolbar: 'undo redo | bold italic alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        tinymce.triggerSave();
+                    });
+                }
+            });
+
+            tinymce.init({
+                selector: 'textarea#reply_message',
+                promotion: false,
+                toolbar: 'undo redo | bold italic alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        tinymce.triggerSave();
+                    });
+                }
+            });
+        }        
+
+        // Message form validation
+        $('#message_form').validate({
+            errorClass: 'border-danger text-danger',
+        }); 
+        
+        // Change Following button to Unfollowing
+        $('.following').on("mouseover", function () {
+            $(this).html('Unfollow');
+        });
+
+        $('.following').on("mouseleave", function () {
+            $(this).html('Following');
         });
         
     });

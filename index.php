@@ -12,6 +12,9 @@ require('require.php');
 ob_start();
 session_start();
 
+// Connect to DB
+include(ROOT_PATH.'db.php');
+
 /*
 // Get HTML Template
 */
@@ -26,12 +29,6 @@ if( isset($_GET['generate_json']) ) {
     // We get the list of registered emails in the database
     // and put them in array
     $user_emails = [];
-    // Let's connect to mySQL DB first
-    $connect_db = connect_db();
-    // Check connection
-    if ($connect_db->connect_error) {
-        die("Connection failed: " . $connect_db->connect_error);
-    }
 
     // Check if email is already taken
     $check_emails = $connect_db->prepare("SELECT email FROM users");
@@ -39,9 +36,6 @@ if( isset($_GET['generate_json']) ) {
     foreach ($check_emails->get_result() as $row){
         $user_emails[] = $row['email'];
     }
-
-    // Close connection to db
-    $connect_db->close();
 
     if($cat){
         $json = new JsonURL();
@@ -52,10 +46,12 @@ if( isset($_GET['generate_json']) ) {
 
     $page_list = ['home', 'login', 'register', 'account_dashboard', 'view_listing', 'view_category', 'search'];    
     $page_name = isset($_GET['page']) ? $_GET['page'] : (  empty($_GET) ? 'home' : 'erro404');
-
-    $header = new Header($page_name);
-    $content = new Content($page_name);
-    $footer = new Footer($page_name);
+    $current_user = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+    
+    $header = new Header($page_name, $current_user);
+    $content = new Content($page_name, $current_user);
+    $footer = new Footer($page_name, $current_user);
+    $widget = new Widget($page_name, $current_user);
 
     echo
     $header->get_html().
@@ -65,5 +61,8 @@ if( isset($_GET['generate_json']) ) {
     $footer->get_html();
 
 }
+
+// Close connection to db
+$connect_db->close();
 
 ?>

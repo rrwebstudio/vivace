@@ -1,9 +1,16 @@
 <?php
-class RegisterPage {
+
+// Connect to DB
+require(ROOT_PATH.'db.php');
+
+class RegisterPage {    
 
     public $page;
 
     function get_page(){
+        
+        global $connect_db;
+
         // $_GET['action'] == 'register_account'
         // This is when registered form is submitted
         // Registration form is somewhere below
@@ -25,24 +32,6 @@ class RegisterPage {
                 $account_type = isset($_POST['account_type']) ? $_POST['account_type']  : null;
                 $register_date = new DateTime();
                 $register_date =  $register_date->format('Y-m-d H:i:s');
-            
-                // Connect to mySQL DB
-                $connect_db = connect_db();
-                // Check connection
-                if ($connect_db->connect_error) {
-                    die("Connection failed: " . $connect_db->connect_error);
-                }
-            
-                // Count registered user in database table "users"
-                $users_sql = "SELECT * from users";    
-                $user_count = null;
-                if ($result = mysqli_query($connect_db, $users_sql)) {
-                    // Return the number of rows in result set
-                    $user_count = mysqli_num_rows( $result );
-                }    
-            
-                // Add 1 to user_count to determine next user ID
-                $user_id = $user_count + 1;
             
                 // Check if email is already taken
                 $check_emails = $connect_db->prepare("SELECT email FROM users");
@@ -73,7 +62,6 @@ class RegisterPage {
                     // Email is valid, proceed to registration
                     // INSERT user data to mySQL
                     $user_data = "INSERT INTO users (
-                        ID,
                         email,
                         pass,
                         company_name,
@@ -88,7 +76,6 @@ class RegisterPage {
                         avatar
                     )
                     VALUES (
-                        '$user_id',
                         '$email_address',
                         '$hashed_password',
                         '$company_name',
@@ -107,11 +94,13 @@ class RegisterPage {
                     if ($connect_db->query($user_data) === TRUE) {
         
                     // Send Email
-                    $message = 'Hi, '.$first_name.',\n';
-                    $message .= 'Welcome to Vivace, here is your info:\n';
-                    $message .= 'Email: '.$email_address.'\n';
-                    $message .= 'Account type: '.$account_type.'\n';
-                    $message .= 'Company: '.$company_name.'\n';
+                    $message = "Hi, $first_name, <br><br>";
+                    $message .= "Welcome to Vivace, here is your info:<br><br>";
+                    $message .= "Email: $email_address<br>";
+                    $message .= "Account type: $account_type<br>";
+                    $message .= "Company: $company_name<br><br>";
+                    $message .= "You may login anytime, just visit the link:<br>";
+                    $message .= SITE_URL."/?page=login";
                     send_mail(
                         $email_address,
                         'Welcome to Vivace, '.$first_name, 
@@ -155,9 +144,6 @@ class RegisterPage {
                     ';
                     }
                 }
-            
-                // Close connection to db
-                $connect_db->close();
 
                 return $html;
             

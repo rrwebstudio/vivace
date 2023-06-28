@@ -1,4 +1,8 @@
 <?php
+
+// Connect to DB
+require(ROOT_PATH.'db.php');
+
 class CategoryTag {  
       
     public $tag;
@@ -13,16 +17,10 @@ class CategoryTag {
     }
 
     function view_tag($event_cat,$venue_cat, $event_tags, $venue_tags) {
+        global $connect_db, $widget, $current_user;
         $tag = $this->tag;
         $type = $this->type;
         $cat_tags = ['foreign','local','indoor','outdoor'];
-
-        // Connect to mysql DB
-        $connect_db = connect_db();
-        // Check connection
-        if ($connect_db->connect_error) {
-            die("Connection failed: " . $connect_db->connect_error);
-        }
 
         // Get associated categories from specified tag or category
         $selected_tag = null;
@@ -79,7 +77,7 @@ class CategoryTag {
             // Get post data from database and look for posts assigned in requested category
             if($type == 'tag') {
                 $get_posts = $connect_db->prepare("SELECT 
-                ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo
+                ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo, discount
                 FROM posts
                 WHERE
                 event_cat LIKE '%$selected_tag%'
@@ -89,17 +87,19 @@ class CategoryTag {
                 venue_cat LIKE '%$selected_tag%'
                 OR
                 venue_type LIKE '%$selected_tag%'
+                ORDER BY modified_date DESC
                 ");
             }
 
             else if($type == 'category') { 
                 $get_posts = $connect_db->prepare("SELECT 
-                ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo
+                ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo, discount
                 FROM posts
                 WHERE
                 event_cat LIKE '%$selected_tag%'
                 OR
                 venue_cat LIKE '%$selected_tag%'
+                ORDER BY modified_date DESC
                 ");
             }            
             $get_posts->execute();
@@ -109,38 +109,62 @@ class CategoryTag {
             $results = $type == 'tag' ? '<h2 class="h4 mb-5">Search results for: #'.$tag.'</h2>' : '<h2 class="h4 mb-5">Search results for: '.$selected_tag.'</h2>';
             while ($row = $result -> fetch_assoc()) {
                 //Get poster's contact details from database
-                $get_author = $connect_db->prepare("SELECT email, company_name FROM users WHERE ID = ?");
+                $get_author = $connect_db->prepare("SELECT email, company_name, follower_discount FROM users WHERE ID = ?");
                 $get_author->bind_param('i', $row['user']);
                 $get_author->execute();
                 $get_author->store_result();
-                $get_author->bind_result($author_email, $author_company);
+                $get_author->bind_result($author_email, $author_company, $global_discount);
                 $get_author->fetch();
+                // Get discount if applicable
+                $applicable_discount = isset($row['discount']) && $row['discount'] > 0 ? $row['discount'] : $global_discount;     
+                $discount_amount =  $row['rent_price'] * ($applicable_discount / 100);
+                $discount_price = $row['rent_price'] - $discount_amount;
+                $widget->set_profile($row['user']);
                 // Get post thumbnail
                 $bg_setphoto = SITE_URL.'/uploads/'.$row['set_photo'];
                 // Format money
                 $money_formatter = new NumberFormatter('en_GB', NumberFormatter::DECIMAL);
                 $money_formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 2);
+                $ref_url = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; 
                 // Show result
                 $results .= '
                 <div class=" post post-'.$row['ID'].' card p-0 shadow mb-4">
                 <div class="card-body p-0">
                     <div class="row">
-                        <div class="col-3">
-                            <div class="ratio ratio-1x1 bg-image rounded-start" style="background-image:url('.$bg_setphoto.')"></div>
+                        <div class="col-3 bg-image" style="background-image:url('.$bg_setphoto.')">
                         </div>
                         <div class="col p-3">                                                      
-                            <div class="post-content position-relative" style="height: 165px; overflow: hidden;">
+                            <div class="post-content position-relative" style="height: 260px; overflow: hidden;">
                                 <h2 class="card-title h4 mb-1">'.$row['title'].'</h2>'
                                 .$row['content'].
                             '</div>
                         </div>  
                         <div class="col-4 py-3 pe-4">
-                        <div class="alert alert-success py-1 px-2">
-                            <a class="alert-link" href="?page=search&view_company='.$row['user'].'">'.$author_company.'</a>
-                            <div class="row">
-                                <div class="col fw-bold price-text">
-                                ₱'.$money_formatter->format($row['rent_price']).'
+                        <div class="alert alert-success py-1 px-2">';
+                            $results .='<div class="row gx-1 d-flex align-items-center mb-2 bg-white p-1 rounded">
+                            <div class="col-auto">
+                                <div class="round-circle" style="width: 20px;">';
+                                $results .= $widget->get_avatar().'
                                 </div>
+                            </div>
+                            <div class="col">
+                                <a class="text-dark fw-bold" href="?page=view_profile&id='.$row['user'].'">'.$author_company.'</a>
+                            </div>
+                            </div>';
+                            $is_following = $widget->is_following();                                          
+                            $results .='
+                            <div class="row">
+                                <div class="col fw-bold price-text text-center">';
+                                if($global_discount > 0 && $is_following == true ) {
+                                    $results .='<span class="text-decoration-line-through">₱'.$money_formatter->format($row['rent_price']).'</span>
+                                    <span class="text-danger fw-bold">₱'.$money_formatter->format($discount_price).'</span></p>';
+                                } else {
+                                    $results .='₱'.$money_formatter->format($row['rent_price']).'</p>';
+                                }                                                
+                                $results .='
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col">
                                 <div class="d-grid gap-2">
                                     <a class="btn btn-success btn-sm" href="?page=search&view_listing='.$row['ID'].'" role="button">View Details</a>
@@ -156,8 +180,23 @@ class CategoryTag {
                                 </div>
                             </div>
                         </div>
-                        <a href="#" class="btn rounded-0 d-inline py-1 px-2 small text-uppercase" style="background-color: #ffc107;">Voucher Code 1</a>
-                        <a href="#" class="btn rounded-0 d-inline py-1 px-2 small text-uppercase" style="background-color: #ffc107;">Voucher Code 2</a>
+                        
+                        <p>';
+                        if($is_following == false){
+                            $results .='<p class="mt-2 small text-muted">Follow '.$author_company.' to receive discounts and more!</p>
+                            <a href="'.$ref_url.'&follow='.$row['user'].'" class="bg-light btn d-inline py-1 px-2 small text-uppercase">Follow</a>';
+                        }
+                        $check_bookmark = $connect_db->prepare("SELECT ID FROM bookmarks WHERE client_id = ? AND listing_id = ?");
+                        $check_bookmark -> bind_param('ii', $current_user, $row['ID']);
+                        $check_bookmark->execute();
+                        $check_bookmark -> store_result();
+                        $check_bookmark -> bind_result($bookmark_id);
+                        if($check_bookmark->num_rows == 0) {
+                            $results .='                                        
+                            <a href="'.$ref_url.'&bookmark='.$row['ID'].'" class="bg-light btn d-inline py-1 px-2 small text-uppercase">Bookmark</a>';
+                        } 
+                        $results .='
+                        </p>
                     </div>
                     </div>                    
                 </div>
@@ -167,9 +206,6 @@ class CategoryTag {
         } else {
             $results = '<p class="h4">No results for the tag: '.$tag.'</p>';
         }
-
-        // Close connection to db
-        $connect_db->close();
         
         return $results;
     }

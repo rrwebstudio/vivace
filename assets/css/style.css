@@ -149,7 +149,7 @@ CONTENT
     min-height: 58px !important;
 }
 
-.select2-selection--single {
+#search_form .select2-selection--single {
     font-size: 13px;
 }
 
@@ -158,7 +158,7 @@ CONTENT
     font-size: 12px;
 }
 
-.select2-container--default .select2-selection--single {
+#search_form .select2-container--default .select2-selection--single {
     border: none !important;
     margin-top: 3px;
 }

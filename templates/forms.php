@@ -1,9 +1,32 @@
 <?php
 
+// Connect to DB
+require(ROOT_PATH.'db.php');
+
 class Form {
     
     //Properties
     public $page;
+    public $id;
+    public $mode;
+    public $action; 
+    public $has_error;
+
+    function set_id($id) {
+        $this->id = $id;
+    }
+
+    function set_mode($mode) {
+        $this->mode = $mode;
+    }
+
+    function set_action($action) {
+        $this->action = $action;
+    }
+
+    function has_error($has_error) {
+        $this->has_error = $has_error;
+    }
 
     // Methods
     function search_form() {
@@ -205,7 +228,8 @@ class Form {
         return $register_form;
     }
 
-    function login_form($has_error){
+    function login_form(){
+        $has_error = $this->has_error;
         $ref_url = isset($_GET['ref']) ? SITE_URL.$_SERVER['REQUEST_URI'].'&action=account_login' : SITE_URL.'/?page=login&action=account_login';
         $login_form = '
         
@@ -219,8 +243,10 @@ class Form {
                     if($has_error == true) {
                         $login_form .='<p class="text-center text-danger">Username or password is incorrect</p>';
                     }
-                    
-                    $login_form .= '
+                    if(isset($_GET['ref']) && $_GET['ref'] == 'password_updated') {
+                        $login_form .='<p class="text-center text-success">Password updated. Please login again.</p>';
+                    }
+                    $login_form .= '                    
                     <form id="login_form" method="post" action="'.$ref_url.'">
                     <div class="mb-3">
                     <label class="fw-bold mb-2" for="email_address">Email Address:<span class="text-danger">*</span></label>
@@ -231,7 +257,7 @@ class Form {
                     <input type="password" class="form-control" id="password" name="password" placeholder="" required>
                     </div>                  
                     <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Login</button>
-                    <p class="mt-5 mb-3 text-body-secondary text-center"><a href="?page=Login&action=forgot">Forgot Username/Password</a></p>
+                    <p class="mt-5 mb-3 text-body-secondary text-center"><a href="?page=login&action=reset_password">Forgot Password</a></p>
                     </form>
                 </article>
                 </div>
@@ -245,7 +271,51 @@ class Form {
 
     }
 
-    function post_form($mode, $listing_id = null){
+    function forgot_form($has_error, $success){
+        $ref_url = SITE_URL.'/?page=login&action=reset_password';
+        $email = isset($_POST['email_address']) ? $_POST['email_address'] : null;
+        $login_form = '
+        
+        <div class="container position-absolute top-50 start-50 translate-middle" style="z-index: 1;">
+            <div class="row">
+            <div class="col-5 mx-auto">
+                <div class="text-center mb-4">'.SITE_LOGO.'</div>    
+                <div class="card border-0  rounded-0 shadow-lg bg-white pb-4">
+                <article class="card-body mx-5">
+                    <h1 class="card-title mt-3 mb-3 text-center">Forgot Password</h1>';
+                    if($has_error == true) {
+                        $login_form .='<p class="text-center text-danger">Email address not found.</p>';
+                    } 
+                    
+                    if($success == true) {
+                        $login_form .='<p class="text-center text-success">Your temporary password has been sent to your email.</p>';
+                    } else if($success == false) {
+                        $login_form .='<p class="text-center text-success">Something weent wrong. Please try again.</p>'; 
+                    }
+                    $login_form .= '                    
+                    <form id="reset_form" method="post" action="'.$ref_url.'">
+                    <div class="mb-3 mt-3">
+                    <label class="fw-bold mb-2" for="email_address">Email Address:<span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email_address" name="email_address" value="'.$email.'" placeholder="your@email.com" required>
+                    </div>                 
+                    <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Reset Password</button>
+                    </form>
+                </article>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="bg-overlay"></div>
+        ';
+
+        return $login_form;
+
+    }
+
+    function post_form(){
+        global $connect_db;
+        $listing_id = $this->id;
+        $mode = $this->mode;
         // Require category arrays
         require(ROOT_PATH.'data/categories.php');        
 
@@ -257,24 +327,16 @@ class Form {
         $venuecat = null;
         $venuetype = null;
         $setphoto = null;
+        $discount = 0;
         if($listing_id) {
-            // Connect to mysql DB
-            $connect_db = connect_db();
-            // Check connection
-            if ($connect_db->connect_error) {
-                die("Connection failed: " . $connect_db->connect_error);
-            }
 
             // Get post data from database
-            $get_posts = $connect_db->prepare("SELECT ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo FROM posts WHERE ID = ?");
+            $get_posts = $connect_db->prepare("SELECT ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo, discount FROM posts WHERE ID = ?");
             $get_posts->bind_param('i', $listing_id);
             $get_posts->execute();
             $get_posts->store_result();
-            $get_posts->bind_result($postid, $userid, $title, $contenttxt, $postdate, $modifieddate, $rentprice, $eventcat, $eventtype, $venuecat, $venuetype, $setphoto);
+            $get_posts->bind_result($postid, $userid, $title, $contenttxt, $postdate, $modifieddate, $rentprice, $eventcat, $eventtype, $venuecat, $venuetype, $setphoto, $discount);
             $get_posts->fetch();
-
-            // Close connection to db
-            $connect_db->close();
 
         }        
 
@@ -301,6 +363,27 @@ class Form {
             <div class="mb-3 row align-items-center">
             <div class="col-auto"><label class="fw-bold mb-2" for="rent_price">Rent Price:<span class="text-danger">*</span></label></div>
             <div class="col"><input type="number" class="form-control w-auto" id="rent_price" name="rent_price" '.$price_val.' placeholder="" required></div>
+            </div>
+            <div class="mb-3">';
+
+            $d_0_sel  = $discount == 0 ? 'selected' : '';
+            $d_10_sel  = $discount == 10 ? 'selected' : '';
+            $d_20_sel  = $discount == 20 ? 'selected' : '';
+            $d_30_sel  = $discount == 30 ? 'selected' : '';
+            $d_40_sel  = $discount == 40 ? 'selected' : '';
+            $d_50_sel  = $discount == 50 ? 'selected' : '';
+
+            $post_form .='
+            <label class="fw-bold mb-2" for="discount_settings">Discount Option:<span class="text-danger">*</span></label>
+            <select class="form-select border-0" id="discount_settings" name="discount_settings" required>
+                <option></option>
+                <option value="0" '.$d_0_sel.'>Turn off discount</option>
+                <option value="10" '.$d_10_sel.'>10% off</option>
+                <option value="20" '.$d_20_sel.'>20% off</option>
+                <option value="30" '.$d_30_sel.'>30% off</option>
+                <option value="40" '.$d_40_sel.'>40% off</option>
+                <option value="50" '.$d_50_sel.'>50% off</option>
+                </select>
             </div>
             <div class="mb-3">
             <label class="fw-bold mb-2" for="event_category">Event Type:<span class="text-danger">*</span></label>
@@ -366,7 +449,7 @@ class Form {
                 $post_form .='<p><img class="img-thumbnail" src="'.SITE_URL.'/uploads/'.$setphoto.'" style="width: 200px;"></p>';                
             }
             $is_required = $mode == 'update' ? '' : 'required';
-            $button_text = $mode == 'update' ? 'Update Listing' : 'Submit Lissting';
+            $button_text = $mode == 'update' ? 'Update Listing' : 'Submit Listing';
             $post_form .='
             <input class="form-control" type="file" id="set_photo" name="set_photo" '.$is_required.'>
             </div>
@@ -376,5 +459,205 @@ class Form {
         ';
 
         return $post_form;
+    }
+
+    function upload_photo_form(){
+        $photo_form = '
+        <div class="row">
+            <form id="post_form" method="post" action="?page=account_dashboard&action=edit_profile&update=photo" enctype ="multipart/form-data">
+            <div class="mb-1">
+            <label class="fw-bold mb-2" for="set_name">Profile Photo:</label>
+            <input class="form-control" type="file" id="profile_photo" name="profile_photo">
+            </div>
+            </div>
+            <button class="w-100 btn btn-lg btn-dark mt-5 rounded-0" type="submit">Upload Photo</button>
+            </form>
+        </div>
+        ';
+
+        return $photo_form;
+    }
+
+    function profile_form() {
+        global $connect_db;
+        $user_id = $this->id;
+        $email = null;
+        $company_name  = null;
+        $company_address = null;
+        $first_name = null;
+        $last_name = null;
+        $phone_number = null;
+        $mobile_number = null;
+
+        // Get user data from database
+        $check_user = $connect_db->prepare("SELECT email, company_name, company_address, first_name, last_name, phone_number, mobile_number FROM users WHERE ID = ?");
+        $check_user -> bind_param('i', $user_id);
+        $check_user->execute();
+        $check_user -> store_result();
+        $check_user -> bind_result($email, $company_name, $company_address, $first_name, $last_name, $phone_number, $mobile_number);
+        $check_user->fetch();
+
+        $profile_form =  '
+
+        <div class="col-12">
+            <div class="row">
+                <div class="col-12">
+                    <form id="profile_form" method="post" action="?page=account_dashboard&action=edit_profile">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="fw-bold mb-2" for="company_name">Company Name:<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-2" value="'.$company_name.'" id="company_name" name="company_name" placeholder="Enter your company name" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                        <label class="fw-bold mb-2" for="company_address">Company Address:<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control border-2" value="'.$company_address.'" id="company_address" name="company_address" placeholder="Enter your company address" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="fw-bold mb-2" for="first_name">First Name:<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-2" value="'.$first_name.'" id="first_name" name="first_name" placeholder="First Name" required>
+                        </div>
+                        <div class="col">
+                            <label class="fw-bold mb-2" for="last_name">Last Name:<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-2" value="'.$last_name.'" id="last_name" name="last_name" placeholder="Last Name" required>
+                        </div>    
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                        <label class="fw-bold mb-2" for="email_address">Email Address:<span class="text-danger">*</span></label>
+                            <input type="email" class="form-control border-2" value="'.$email.'" id="email_address" name="email_address" placeholder="your@email.com" required>
+                        </div>                      
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="fw-bold mb-2" for="phone_number">Phone Number:<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-2" value="'.$phone_number.'" id="phone_number" name="phone_number" placeholder="" required>
+                        </div>                        
+                        <div class="col">
+                            <label class="fw-bold mb-2" for="mobile_number">Mobile Number:<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-2" value="'.$mobile_number.'" id="mobile_number" name="mobile_number" placeholder="" required>
+                       </div>
+                       
+                    </div>
+                    <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Update Profile</button>
+                    </form>
+                </div>
+            </div>            
+        </div>
+
+        ';
+
+        return $profile_form;
+    }
+
+    function password_form() {
+        //$user_id = $this->id;
+
+        $password_form =  '
+
+        <form id="password_form" method="post" action="?page=account_dashboard&action=update_password">
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="fw-bold mb-2" for="password">New Password:<span class="text-danger">*</span></label>
+                    <input type="password" class="form-control border-2" id="password" name="password" placeholder="" required>
+                </div>                       
+                <div class="col">
+                    <label class="fw-bold mb-2" for="password2">Repeat New Password:<span class="text-danger">*</span></label>
+                    <input type="password" class="form-control border-2" id="password_confirm" name="password_confirm" placeholder="" required>
+                </div>                       
+            </div>
+            <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Change Password</button>
+        </form>
+
+        ';
+
+        return $password_form;
+    }
+
+    function discount_form() {
+        global $connect_db;
+        $discount_id = $this->id;
+        $discount = '';
+
+        // Get discount from database
+        $check_discount = $connect_db->prepare("SELECT title FROM discounts WHERE ID = ?");
+        $check_discount -> bind_param('i', $discount_id);
+        $check_discount->execute();
+        $check_discount-> store_result();
+        $check_discount-> bind_result($discount);
+        $check_discount->fetch();
+
+        $discount_form =  '
+
+        <form id="discount_form" method="post" action="?page=account_dashboard&view=discount_settings">
+            <div class="row mb-3">
+                <div class="col">
+                <select class="form-select border-0" id="discount_settings" name="discount_settings" required>
+                <option></option>
+                <option value="0">Turn off discount</option>
+                <option value="10">10% off</option>
+                <option value="20">20% off</option>
+                <option value="30">30% off</option>
+                <option value="40">40% off</option>
+                <option value="50">50% off</option>
+                </select>
+                </div>                     
+            </div>
+            <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Set Discount Option</button>
+        </form>
+
+        ';
+
+        return $discount_form;
+    }
+
+    function message_form(){
+        $recipient_id = $this->id;
+        $subject_value = isset($_POST['subject']) ? $_POST['subject'] : '';
+        $message_body = isset($_POST['message']) ? $_POST['message'] : '';
+        $message_form = '';
+
+        $message_form =  '
+
+        <form id="discount_form" method="post" action="?page=account_dashboard&action=create_message&recipient_id='.$recipient_id.'">
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="fw-bold mb-2" for="subject">Subject: <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control border-2" id="subject" name="subject" value="'.$subject_value.'" placeholder="Enter your subject" required>
+                </div>                     
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="fw-bold mb-2" for="message">Message: <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="message" name="message" rows="6" required="required">'.$message_body.'</textarea>
+                </div>                     
+            </div>
+            <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Send Message</button>
+        </form>
+
+        ';
+        return $message_form;
+    }
+
+    function reply_form(){
+        $thread_id = $this->id;
+        $message_body = isset($_POST['reply_message']) ? $_POST['reply_message'] : '';
+
+        $reply_form =  '
+
+        <form id="discount_form" method="post" action="?page=account_dashboard&view=messages&thread_id='.$thread_id.'">
+            <div class="row mb-3">
+                <div class="col">
+                    <textarea class="form-control" id="reply_message" name="reply_message" rows="6" required="required">'.$message_body.'</textarea>
+                </div>                     
+            </div>
+            <button class="w-100 btn btn-lg btn-dark rounded-0" type="submit">Reply</button>
+        </form>
+
+        ';
+        return $reply_form;
     }
 }

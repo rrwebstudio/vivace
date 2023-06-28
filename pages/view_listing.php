@@ -1,5 +1,8 @@
 <?php
 
+// Connect to DB
+require(ROOT_PATH.'db.php');
+
 class ViewListing {
 
     public $id;
@@ -8,36 +11,27 @@ class ViewListing {
         $this->id = $id;
     }
 
-    function get_page(){        
-
-        // Connect to mysql DB
-        $connect_db = connect_db();
-        // Check connection
-        if ($connect_db->connect_error) {
-            die("Connection failed: " . $connect_db->connect_error);
-        }
+    function get_page(){
+        global $connect_db, $widget, $current_user;
 
         $post_id = $this->id;
 
         // Get post data from database
-        $get_posts = $connect_db->prepare("SELECT ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo FROM posts WHERE ID = ?");
+        $get_posts = $connect_db->prepare("SELECT ID, user, title, content, post_date, modified_date, rent_price, event_cat, event_type, venue_cat, venue_type, set_photo, discount FROM posts WHERE ID = ?");
         $get_posts->bind_param('i', $post_id);
         $get_posts->execute();
         $get_posts->store_result();
-        $get_posts->bind_result($postid, $userid, $title, $contenttxt, $postdate, $modifieddate, $rentprice, $eventcat, $eventtype, $venuecat, $venuetype, $setphoto);
+        $get_posts->bind_result($postid, $userid, $title, $contenttxt, $postdate, $modifieddate, $rentprice, $eventcat, $eventtype, $venuecat, $venuetype, $setphoto, $discount);
         $get_posts->fetch();
         
 
         //Get poster's contact details from database
-        $get_author = $connect_db->prepare("SELECT ID, email, company_name FROM users WHERE ID = ?");
+        $get_author = $connect_db->prepare("SELECT ID, email, company_name, follower_discount FROM users WHERE ID = ?");
         $get_author->bind_param('i', $userid);
         $get_author->execute();
         $get_author->store_result();
-        $get_author->bind_result($author_id, $author_email, $author_company);
+        $get_author->bind_result($author_id, $author_email, $author_company, $global_discount);
         $get_author->fetch();
-
-        // Close connection to db
-        $connect_db->close();
 
         // Get image url
         $bg_setphoto = SITE_URL.'/uploads/'.$setphoto;
@@ -56,7 +50,19 @@ class ViewListing {
 
         $search  = array('(', ')', ' / ', ' - ',' ', '&');
         $replace = array('', '', '_', '_', '_','');
+
+        // Set profiile to result id
+        $widget->set_profile($userid);        
+
+        // Discount if aplicable
+        $applicable_discount = $discount > 0 ? $discount : $global_discount;     
+        $discount_amount =  $rentprice * ($applicable_discount / 100);
+        $discount_price = $rentprice - $discount_amount;
         
+        // Check if current usser is following profile
+        $is_following = $widget->is_following();
+
+        $ref_url = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; 
 
         // Display content of page
         $content = '
@@ -68,8 +74,17 @@ class ViewListing {
                 </div>
                 <div class="col-5">
                     <h1 class="h3">'.$title.'</h1>
-                    <div class="display-6 border-bottom pb-4 mb-3">
-                    ₱'.$money_formatter->format($rentprice).'
+                    <div class="h4 border-bottom pb-4 mb-3  fw-light">';
+                    if($applicable_discount > 0 && $is_following == true ) {
+                        $content .='<span class="text-decoration-line-through">₱'.$money_formatter->format($rentprice).'</span> ';
+                        $content .='<span class="text-danger">₱'.$money_formatter->format($discount_price).'</span>';
+                    }  else {
+                        $content .='₱'.$money_formatter->format($rentprice);
+                    } 
+                    if($userid != $current_user) {
+                        $content .='<p class="m-0"><a href="'.$ref_url.'&bookmark='.$post_id.'" class="bg-light btn d-inline py-1 px-2 small text-uppercase">Bookmark</a></p>';
+                    }
+                    $content .='
                     </div>
                     <div class="list-content">
                     '.$contenttxt.'
@@ -110,22 +125,18 @@ class ViewListing {
                                 </div>
                             </div> 
                         </div>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <a class="btn btn-dark rounded-0 p-3" href="?page=search&view_listing='.$post_id.'&action=rent_set" role="button">Rent this Equipment Set</a>
-                    </div>
+                    </div>';
+                    if($current_user != $userid){
+                        $content .='
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-dark rounded-0 p-3 fw-bold" href="?page=account_dashboard&action=create_message&recipient_id='.$userid.'" role="button">Send Inquiry</a>
+                        </div>';
+                    }
+                    $content .='
                 </div>
                 <div class="col">
-                    <div class="card shadow p-3 mt-2 px-3 mb-4">
-                        <div class="mb-3">
-                            <span class="lead d-block">'.$author_company.'</span>
-                            <div class="d-grid gap-2">
-                                    <a class="btn btn-outline-dark rounded-0 btn-sm" href="#" role="button">Follow</a>
-                                    <a class="btn btn-outline-dark rounded-0 btn-sm" href="#" role="button">Message</a>
-                                    <a class="btn btn-outline-dark rounded-0 btn-sm" href="#" role="button">View Profile</a>
-                            </div>                            
-                        </div>                        
-                    </div>
+                '.$widget->profile_box().'
+                '.$widget->profile_user_data().'
                 </div>
             </div>
         </div>

@@ -46,9 +46,10 @@ include('pages/view_profile.php');
 
 /*
 
-DATA
+OTHERS
 
 */
 
 include('data/json.php');
 include('functions/sendmail.php');
+include('functions/randompassword.php');

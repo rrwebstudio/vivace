@@ -6,9 +6,9 @@
 
 class Header extends Template {
 
-
     // Methods    
     function get_html() {
+        global $widget;
         $page = $this->page;
         $page_title = str_replace('_', ' ', $page);
         $page_title = ucwords($page_title);
@@ -21,7 +21,7 @@ class Header extends Template {
                 <meta name="description" content="">
     
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
-                <link href="../assets/css/style.css?v=0.0.3" rel="stylesheet">
+                <link href="../assets/css/style.css?v=0.0.5" rel="stylesheet">
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">    
@@ -50,7 +50,7 @@ class Header extends Template {
 
         // Navigation
         // Show everywhere except Login and Register Page
-        if(!in_array($page, array('login', 'register'))) {                
+        if(!in_array($page, array('login', 'register'))) {             
             $html .= '
             <div id="main-header" class="container-fluid px-0">
             <nav class="navbar navbar-expand-lg navbar-dark bg-black border-0 shadow">
@@ -72,15 +72,27 @@ class Header extends Template {
                     </li>   
                     ';
                 } else {
+                    $unread_count = $widget->get_unread_count();
+                    if(isset($_SESSION['account_type']) && $_SESSION['account_type'] == 'company') {
+                        $html .='
+                        <li class="nav-item">
+                        <a class="btn-primary nav-link" href="'.SITE_URL.'/?page=account_dashboard&action=post_listing">Post a Listing</a>';
+                    }                    
                     $html .='
-                    <li class="nav-item">
-                    <a class="btn-primary nav-link" href="'.SITE_URL.'/?page=account_dashboard&action=post_listing">Post a Listing</a>
                     </li>
                     <li class="nav-item">
                     <a class="nav-link" href="'.SITE_URL.'/?page=view_profile&id='.$_SESSION['user_id'].'">My Profile</a>
                     </li>  
                     <li class="nav-item">
-                    <a class="nav-link" href="'.SITE_URL.'/?page=account_dashboard">Account Dashboard</a>
+                    <a class="nav-link" href="'.SITE_URL.'/?page=account_dashboard">Account Dashboard';
+                    if($unread_count > 0){
+                        $html .='
+                        <span class="badge rounded-pill bg-danger">
+                            '.$unread_count.'
+                            <span class="visually-hidden">unread messages</span>
+                        </span>'; 
+                    }
+                    $html .='</a>
                     </li>                                      
                     <li class="nav-item">
                     <a class="nav-link" href="'.SITE_URL.'/?page=account_dashboard&action=logout">Logout</a>
@@ -121,7 +133,6 @@ class Header extends Template {
                 
             } else {
                 if(in_array($page, array('account_dashboard'))) {
-                    $widget = new Widget();
                     // Welcome message
                     $html .= '<div class="bg-image position-relative" style="background-image:url('.SITE_URL.'/assets/images/bg_dashboard2.jpg); background-position: 50% 0%;">';
                     $html .= '

@@ -25,7 +25,7 @@ class Content extends Template {
         // Account Dashboard
         else if($page=='account_dashboard') {
             $account_dashboard = new AccountDashboard();
-            return $account_dashboard->get_page();
+            return $account_dashboard->get_page($page);
         }
 
         // View Search
@@ -50,6 +50,33 @@ class Content extends Template {
             $profile = new ViewProfile();
             $profile->set_user($user_id);
             return $profile->get_profile();
+        } else {
+            return '
+            <div class="row p-0 m-0 position-relative bg-image" style="background-image:url('.SITE_URL.'/assets/images/bg_search.jpg); height: 100px; background-position: 50% 50%;">
+                <div class="col-auto mx-auto position-absolute top-100 start-50 translate-middle">
+                
+                </div>
+            </div>
+            <div class="row p-0 mx-0 mt-5">
+                <div class="col">
+                    <p class="display-6 text-center mt-0 pt-0">
+                    
+                    </p>
+                </div>
+            </div>
+            <div class="container-lg py-5">
+                <div class="row gx-5 py-5">
+                    <div class="col text-center py-5">
+                        <h2 class="h4">404 - Page Not Found</h2>
+                        <p>Whoops! Sorry, but this page doesn\'t exist.</p>
+                        <p>Why not use the links above or <a href="?page=search">search</a> to find what you\'re looking for?
+                            Alternatively, you could go back to <a href="javascript:window.history.back();">where you were</a>
+                            or start again from the <a href="/">home page</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        '; 
         }
         
     }

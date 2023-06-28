@@ -3,25 +3,20 @@
 class Homepage {
     
     function get_page(){
+        global $connect_db, $widget;
+        
         // Require category arrays
         require(ROOT_PATH.'data/categories.php');
 
         $search  = array('(', ')', ' / ', ' - ',' ');
         $replace = array('', '', '_', '_', '_');
 
-        // Connect to mysql DB
-        $connect_db = connect_db();
-        // Check connection
-        if ($connect_db->connect_error) {
-            die("Connection failed: " . $connect_db->connect_error);
-        }
-
-        $get_users = $connect_db -> prepare('SELECT ID, company_name FROM users');
+        $user_type = 'company';
+        $get_users = $connect_db->prepare('SELECT ID, company_name FROM users WHERE user_type = ?');
+        $get_users->bind_param('s', $user_type);
         $get_users->execute();
         $get_users->store_result();
-        $get_users->bind_result($user_id, $company_name);
-
-        $widget = new Widget();        
+        $get_users->bind_result($profile_id, $company_name);       
     
 
         $content = '
@@ -106,7 +101,7 @@ class Homepage {
                 <div class="col-3">
                     <h2 class="h5 mb-4">Featured Companies</h2>';
                     while ($get_users->fetch()) {
-                        $widget->set_user($user_id);
+                        $widget->set_profile($profile_id);
                         $content .='<div class="row gx-1 mb-3 pb-3 border-bottom border-light">
                         <div class="col-auto">
                             <div style="width: 30px;">';
@@ -114,7 +109,7 @@ class Homepage {
                             </div>
                         </div>
                         <div class="col">
-                            <a class="text-dark fw-bold" href="?page=view_profile&id='.$user_id.'">'.$company_name.'</a>
+                            <a class="text-dark fw-bold" href="?page=view_profile&id='.$profile_id.'">'.$company_name.'</a>
                         </div>
                         </div>';
                     }
@@ -123,9 +118,6 @@ class Homepage {
             </div>
         </div>
     ';
-
-    // Close connection to db
-    $connect_db->close();
 
     return $content;
     }

@@ -1,23 +1,71 @@
 <?php
 
-class LoginPage {
+// Connect to DB
+require(ROOT_PATH.'db.php');
 
-  public $action;
-
-  function set_action($action) {
-    $this->action = $action;
-  }
+class LoginPage {  
 
   // Get Login Page and subpages
   function get_page() {
+    global $connect_db;
     $form = new Form();
 
     // Login page - Forgot Password form
-    if( isset($_GET['action']) && $_GET['action'] == 'forgot' ) {
+    if( isset($_GET['action']) && $_GET['action'] == 'reset_password' ) {
         if(empty($_SESSION['user_id'])) {
-            // User not logged in
-            // Show Forgot password form
-            //return $form->login_form(false);
+          $has_error = false;
+          $success = null;
+          // Process login only in $_POST method
+          if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+            $submitted_email = isset($_POST['email_address']) ? $_POST['email_address'] : null;          
+            $email = null;
+            $company_name = null;
+            $user_id = null;
+            $check_user = $connect_db->prepare("SELECT ID, email, company_name FROM users WHERE email = ?");
+            $check_user->bind_param('s', $submitted_email);
+            $check_user->execute();
+            $check_user->store_result();
+            $check_user->bind_result($user_id, $email, $company_name);
+            $check_user->fetch();
+            $has_error = $check_user->num_rows == 1 ? false : true;          
+
+            if($check_user->num_rows == 1){
+              // Email checks out, sending random password to email
+              $password = randomPassword();
+              $hashed_password = isset($submitted_email) ? password_hash($password, PASSWORD_DEFAULT) : null; // we don't store password in db, only hashed ones
+
+              // Update password in MySQL
+              $update_password = "UPDATE users SET                                
+              pass = '$hashed_password'
+              WHERE id='$user_id'"; 
+
+              // If successful, show confirmation text then send email
+              if ($connect_db->query($update_password) === TRUE) {
+                  $success == true;
+                  // Send Email
+                  $message = "Hello there, <br>";
+                  $message .= "Your account is as follows: <br>";
+                  $message .= "<br>";
+                  $message .= "Company: $company_name <br>";
+                  $message .= "Email: $email <br>";
+                  $message .= "New Password: $password <br>";
+                  $message .= "<br>";
+                  $message .= "<br>";
+                  $message .= "Please change this random password after you login.";
+                  send_mail(
+                      $email,
+                      'Your new password', 
+                      $message
+                  );
+              } else {
+                $success == false;
+              }            
+            }
+          }
+          // User not logged in
+          // Show Forgot password form
+          return $form->forgot_form($has_error, $success);
         } else {
             // User is already logged in
             // No need to visit this page
@@ -36,14 +84,7 @@ class LoginPage {
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Get submitted credentials
                 $email_address = isset($_POST['email_address']) ? $_POST['email_address'] : null;
-                $password = isset($_POST['password']) ? $_POST['password'] : null;      
-
-                // Connect to mysql DB
-                $connect_db = connect_db();
-                // Check connection
-                if ($connect_db->connect_error) {
-                    die("Connection failed: " . $connect_db->connect_error);
-                }
+                $password = isset($_POST['password']) ? $_POST['password'] : null;
 
                 // Check if email and password is accepted
                 $check_user = $connect_db->prepare("SELECT ID, email, pass, company_name, company_address, first_name, last_name, phone_number, mobile_number, user_type, avatar FROM users WHERE email = ?");
@@ -62,15 +103,6 @@ class LoginPage {
                         // Password verified
                         // Get user data and save to current session
                         $_SESSION['user_id'] = $user_id;
-                        $_SESSION['email'] = $email;
-                        $_SESSION['company_name'] = $company_name;
-                        $_SESSION['company_address'] = $company_address;
-                        $_SESSION['first_name'] = $first_name;
-                        $_SESSION['last_name'] = $last_name;
-                        $_SESSION['phone_number'] = $phone_number;
-                        $_SESSION['mobile_number'] = $mobile_number;
-                        $_SESSION['account_type'] = $user_type;
-                        $_SESSION['avatar'] = $avatar;
                         // Then rdirect to Account Dashboard
                         $ref_url = isset($_GET['ref']) ? $_GET['ref'] : '';
                         if(empty($ref_url)){
@@ -82,25 +114,25 @@ class LoginPage {
                         // Password incorrect
                         // show error in login form
                         $has_error = true;
-                        return $form->login_form($has_error);
+                        $form->has_error($has_error);
+                        return $form->login_form();
                       }
                   }                   
                 } else {
                     // No result - either email or password is incorrect
                     // Show error in login form
                     $has_error = true;
-                    return $form->login_form($has_error);
+                    $form->has_error($has_error);
+                    return $form->login_form();
                 }
-
-                // Close connection to db
-                $connect_db->close();
 
             }
 
         } else {
             if(empty($_SESSION['user_id'])) {
               $has_error = false;
-              return $form->login_form($has_error);
+              $form->has_error($has_error);
+              return $form->login_form();
             } else {
                 redirect('?page=account_dashboard');
             }                   

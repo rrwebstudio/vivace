@@ -5,7 +5,8 @@ class Widget extends Template {
     public $profile_id;
     public $thread_id;
     public $thread_subject;
-    public $position;   
+    public $position;
+    public $listing_id;   
 
     function set_thread($thread_id) {
         $this->thread_id = $thread_id;
@@ -17,6 +18,10 @@ class Widget extends Template {
 
     function set_profile($profile_id) {
         $this->profile_id= $profile_id;
+    }
+
+    function set_listing($listing_id) {
+        $this->listing_id = $listing_id;
     }
 
     function get_user(){
@@ -451,24 +456,24 @@ class Widget extends Template {
                             <div class="col-4 py-3 pe-4">
                             <div class="alert alert-success py-1 px-2">
                             <div class="row gx-1 d-flex align-items-center mb-2 bg-white p-1 rounded">
-                            <div class="col-auto">
-                                <div class="round-circle" style="width: 20px;">'
-                                .$widget->get_avatar().
-                                '</div>
-                            </div>
-                            <div class="col">
-                                <a class="text-dark fw-bold" href="?page=view_profile&id='.$userid.'">'.$author_company.'</a>
-                            </div>
+                                <div class="col-auto">
+                                    <div class="round-circle" style="width: 20px;">'
+                                    .$widget->get_avatar().
+                                    '</div>
+                                </div>
+                                <div class="col">
+                                    <a class="text-dark fw-bold" href="?page=view_profile&id='.$userid.'">'.$author_company.'</a>
+                                </div>
                             </div>';
                             $is_following = $widget->is_following();                                          
                             $listings .='
                             <div class="row">
                                 <div class="col fw-bold price-text text-center">';
                                 if($global_discount > 0 && $is_following == true ) {
-                                    $listings .='<span class="text-decoration-line-through">₱'.$money_formatter->format($rentprice).'</span>
+                                    $listings .='<p><span class="text-decoration-line-through">₱'.$money_formatter->format($rentprice).'</span>
                                     <span class="text-danger fw-bold">₱'.$money_formatter->format($discount_price).'</span></p>';
                                 } else {
-                                    $listings .='₱'.$money_formatter->format($rentprice).'</p>';
+                                    $listings .='<p>₱'.$money_formatter->format($rentprice).'</p>';
                                 }                                                
                                 $listings .='
                                 </div>
@@ -702,6 +707,7 @@ class Widget extends Template {
     function profile_box(){
         global $connect_db, $widget, $current_user;
         $profile_id = $this->profile_id;
+        $listing_id = $this->listing_id;
         $page = $this->page;
         $col_size = $page == 'search' ? 'col-3' : 'col';
         $ref_url = "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -755,7 +761,7 @@ class Widget extends Template {
                     $content .='<a class="following btn btn-outline-dark border-light border-3 rounded-0 fw-bold" href="'.$ref_url.'&unfollow='.$profile_id.'" role="button">Following</a>';
                 }
                 $content .='
-                <a class="btn btn-dark rounded-0 fw-bold" href="?page=account_dashboard&action=create_message&recipient_id='.$profile_id.'" role="button">Send Inquiry</a>
+                <a class="btn btn-dark rounded-0 fw-bold" href="?page=account_dashboard&action=create_message&recipient_id='.$profile_id.'&listing_id='.$listing_id.'" role="button">Send Inquiry</a>
                 </div>
                 ';
             }
@@ -925,11 +931,10 @@ class Widget extends Template {
     function get_message_thread() {
         global $connect_db, $widget, $current_user;
         $thread_id = $this->thread_id;
-
         $content ='';
         
         // Prepare sql statement to get messages
-        $messages = $connect_db -> prepare('SELECT ID, thread_id, sender_id, recipient_id, message_subject, message_body, sender_status, recipient_status, message_date, is_first_message
+        $messages = $connect_db -> prepare('SELECT ID, thread_id, sender_id, recipient_id, listing_id, message_subject, message_body, sender_status, recipient_status, message_date, is_first_message
         FROM messages WHERE thread_id = ?');
         $messages -> bind_param('i', $thread_id);
         $messages -> execute();
@@ -971,8 +976,99 @@ class Widget extends Template {
                 $recipient->bind_result($recipient_name);
                 $recipient->fetch();
 
+                // Get post data from database
+                $get_posts = $connect_db->prepare("SELECT user, title, content, modified_date, rent_price, set_photo, discount FROM posts WHERE ID = ?");
+                $get_posts->bind_param('i', $message['listing_id']);
+                $get_posts->execute();
+                $get_posts->store_result();
+                $get_posts->bind_result($author_id, $title, $contenttxt, $modifieddate, $rentprice, $setphoto, $discount);
+                $get_posts->fetch();
+
+                //Get poster's contact details from database
+                $get_author = $connect_db->prepare("SELECT company_name, follower_discount FROM users WHERE ID = ?");
+                $get_author->bind_param('i', $author_id);
+                $get_author->execute();
+                $get_author->store_result();
+                $get_author->bind_result( $author_company, $global_discount);
+                $get_author->fetch();
+
+                // Get post thumbnail
+                $bg_setphoto = SITE_URL.'/uploads/'.$setphoto;
+
+                // Format money
+                $money_formatter = new NumberFormatter('en_GB', NumberFormatter::DECIMAL);
+                $money_formatter->setAttribute(NumberFormatter::MIN_FRACTION_DIGITS, 2);
+
+                // Set profiile id and listing id
+                $widget->set_profile($author_id);
+                $widget->set_listing($message['listing_id']);
+
+                // Discount if aplicable
+                $applicable_discount = $discount > 0 ? $discount : $global_discount;     
+                $discount_amount =  $rentprice * ($applicable_discount / 100);
+                $discount_price = $rentprice - $discount_amount;
+
                 // Display message content
-                $content .= $i === 1 ? '<h5 class="border-bottom mb-3 pb-3 border-light">'.$message['message_subject'].'</h5>' : '';
+                $content .= $i === 1 ? '<h5 class="mb-3">'.$message['message_subject'].'</h5>' : '';
+                if($message['listing_id'] > 0 ){
+                    $content .= '<div class=" post post-'.$message['listing_id'].' card p-0 shadow mb-4">
+                        <div class="card-body p-0">
+                            <div class="row m-0">';
+                                $content .= '<div class="col-3 bg-image rounded-start" style="background-image:url('.$bg_setphoto.');">';                                                                                                                 
+                                $content .= '
+                                </div>
+                                <div class="col p-3">                                                      
+                                    <div class="post-content position-relative" style="height: 170px; overflow: hidden;">
+                                        <h3 class="card-title h4 mb-1 d-flex align-items-center"><span class="listing_title">'.$title.' </span></h3>
+                                        '.$contenttxt.'
+                                    </div>
+                                </div>
+                                <div class="col-4 py-3 pe-4">
+                                    <div class="alert alert-success py-1 px-2">
+                                        <div class="row gx-1 d-flex align-items-center mb-2 bg-white p-1 rounded">
+                                            <div class="col-auto">
+                                                <div class="round-circle" style="width: 20px;">'
+                                                .$widget->get_avatar().
+                                                '</div>
+                                            </div>
+                                            <div class="col">
+                                                <a class="text-dark fw-bold" href="?page=view_profile&id='.$author_id.'">'.$author_company.'</a>
+                                            </div>
+                                        </div>';
+                                        $is_following = $widget->is_following();                                          
+                                        $content .='
+                                        <div class="row">
+                                            <div class="col fw-bold price-text text-center">';
+                                            if($global_discount > 0 && $is_following == true ) {
+                                                $content .='<p class="mb-0"><span class="text-decoration-line-through">₱'.$money_formatter->format($rentprice).'</span>
+                                                <span class="text-danger fw-bold">₱'.$money_formatter->format($discount_price).'</span></p>';
+                                            } else {
+                                                $content .='<p class="mb-0">₱'.$money_formatter->format($rentprice).'</p>';
+                                            }                                                
+                                            $content .='
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                        <div class="col">
+                                        <div class="d-grid gap-2">
+                                            <a class="btn btn-success btn-sm" href="?page=search&view_listing='.$message['listing_id'].'" role="button">View Details</a>
+                                        </div>                                    
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div class="alert alert-light border py-1 px-2">
+                                        <div class="post-meta">
+                                            <div class="meta-date">';
+                                            $content .= '
+                                                Posted on '.$modifieddate.'
+                                            </div>
+                                        </div>
+                                    </div> 
+                                </div>                          
+                            </div>                   
+                        </div>
+                    </div>';
+                }                
                 $content .= '<div class="row gx-3 p-3">';                                        
                 $content .= '<div class="col-1">';
                 $widget->set_profile($message['sender_id']);

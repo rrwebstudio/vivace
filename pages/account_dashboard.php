@@ -658,8 +658,11 @@ class AccountDashboard {
                         // View Messages
                         else if( isset($_GET['view']) && $_GET['view'] == 'messages' ) { 
                             if (isset($_GET['thread_id'])) {
+                                // thread id
                                 $thread_id = isset($_GET['thread_id']) ? $_GET['thread_id'] : null;
+
                                 $widget->set_thread($thread_id);
+                                
                                 $message_info = $widget->get_thread_info();
                                 // Only procces the submission on POST method
                                 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -676,6 +679,7 @@ class AccountDashboard {
                                         thread_id,
                                         sender_id,
                                         recipient_id,
+                                        listing_id,
                                         message_subject,
                                         message_body,
                                         sender_status,
@@ -687,6 +691,7 @@ class AccountDashboard {
                                         '$thread_id',
                                         '$sender_id',
                                         '$recipient_id',
+                                        '$listing_id',
                                         '$message_subject',
                                         '$message_body',
                                         '$sender_status',
@@ -740,10 +745,13 @@ class AccountDashboard {
                         }
 
                         // Create Message
-                        else if( (isset($_GET['action']) && $_GET['action'] == 'create_message') && isset($_GET['recipient_id'])) {
+                        else if( (isset($_GET['action']) && $_GET['action'] == 'create_message') && isset($_GET['recipient_id']) && isset($_GET['listing_id'])) {
 
                             // Recipient ID
                             $recipient_id = isset($_GET['recipient_id']) ? $_GET['recipient_id'] : null;
+                            
+                            // listing ID
+                            $listing_id = isset($_GET['listing_id']) ? $_GET['listing_id'] : null;
 
                             // Prepare sql statement to get profile data
                             $check_user = $connect_db->prepare("SELECT company_name FROM users WHERE ID = ?");
@@ -757,7 +765,9 @@ class AccountDashboard {
                                     // Get result
                                 if($check_user->fetch()) {
                                     $widget->set_profile($recipient_id);
+                                    $widget->set_listing($listing_id);
                                     $form->set_id($recipient_id);
+                                    $form->set_listing($listing_id);
                                     // Only procces the submission on POST method
                                     if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         if(empty($_POST['message'] || empty($_POST['subject']))){
@@ -792,6 +802,7 @@ class AccountDashboard {
                                                 thread_id,
                                                 sender_id,
                                                 recipient_id,
+                                                listing_id,
                                                 message_subject,
                                                 message_body,
                                                 sender_status,
@@ -803,6 +814,7 @@ class AccountDashboard {
                                                 '$thread_id',
                                                 '$sender_id',
                                                 '$recipient_id',
+                                                '$listing_id',
                                                 '$message_subject',
                                                 '$message_body',
                                                 '$sender_status',

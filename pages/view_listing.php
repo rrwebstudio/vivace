@@ -51,8 +51,9 @@ class ViewListing {
         $search  = array('(', ')', ' / ', ' - ',' ', '&');
         $replace = array('', '', '_', '_', '_','');
 
-        // Set profiile to result id
-        $widget->set_profile($userid);        
+        // Set profiile id and listing id
+        $widget->set_profile($userid);
+        $widget->set_listing($post_id);
 
         // Discount if aplicable
         $applicable_discount = $discount > 0 ? $discount : $global_discount;     
@@ -70,6 +71,7 @@ class ViewListing {
             <div class="row gx-5">
                 <div class="col">
                     <div class="ratio ratio-1x1 bg-image" style="background-image:url('.$bg_setphoto.')">
+                    <img class="listing-image d-none img-fluid" src="'.$bg_setphoto.'">
                     </div>
                 </div>
                 <div class="col-5">
@@ -129,12 +131,12 @@ class ViewListing {
                     if($current_user != $userid){
                         $content .='
                         <div class="d-grid gap-2">
-                            <a class="btn btn-dark rounded-0 p-3 fw-bold" href="?page=account_dashboard&action=create_message&recipient_id='.$userid.'" role="button">Send Inquiry</a>
+                            <a class="btn btn-dark rounded-0 p-3 fw-bold" href="?page=account_dashboard&action=create_message&recipient_id='.$userid.'&listing_id='.$post_id.'" role="button">Send Inquiry</a>
                         </div>';
                     }
                     $content .='
                 </div>
-                <div class="col">
+                <div class="col profile">
                 '.$widget->profile_box().'
                 '.$widget->profile_user_data().'
                 </div>

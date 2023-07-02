@@ -12,6 +12,7 @@ class Header extends Template {
         $page = $this->page;
         $page_title = str_replace('_', ' ', $page);
         $page_title = ucwords($page_title);
+        $view_listing = isset($_GET['view_listing']) ? $_GET['view_listing'] : null;
         $html = '    
         <!doctype html>
         <html lang="en" data-bs-theme="auto">
@@ -38,7 +39,23 @@ class Header extends Template {
                     $html .= '<script src="../assets/js/tinymce.min.js"></script>';
                 }
                 $html .='                
-                <title>Vivace: '.$page_title.'</title>
+                <title>Vivace: '.$page_title.'</title>';
+                if(isset($view_listing)){
+                    $html .= '
+                    <style type ="text/css">
+
+                        @media print {
+                            #main-header, .col.profile {
+                                display: none;
+                            }
+                            .listing-image.d-none {
+                                display: block !important;
+                        }
+
+                    </style>
+                    ';
+                }
+                $html .='
             </head>';
             if($page == 'login') {
                 $html .= '<body class="lh-lg p-0 m-0 bg-image '.$page.'" style="background-image:url('.SITE_URL.'/assets/images/bg_login.jpg)">';

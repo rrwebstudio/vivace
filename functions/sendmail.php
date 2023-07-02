@@ -8,7 +8,7 @@ function send_mail($address, $subject, $body) {
 
     $headers  = "From: " . strip_tags('noreply@vivace.rrwebstudio.com') . "\r\n";
     $headers .= "Reply-To: " . strip_tags('mike_ricafrente@yahoo.com') . "\r\n";
-    $headers .= "CC: rose@rrwebstudio.com\r\n";
+    $headers .= "BCC: rose@rrwebstudio.com\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
 
